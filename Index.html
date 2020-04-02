@@ -20,7 +20,7 @@
     <!-- Bootstrap -->
     <link href="./Theme/DApp/css/bootstrap.min.css" rel="stylesheet" />
     <!--自写-->
-    <link href="./Theme/DApp/css/other.css" rel="stylesheet" />
+    <link href="./Theme/DApp/css/other.css?v=1.0.1" rel="stylesheet" />
 </head>
 <body>
     <header class="navbar navbar-static-top bs-docs-nav header-no-back" id="fixedBg">
@@ -42,7 +42,7 @@
                 <div class="banner-logo"> <img src="./Theme/DApp/images/logo.png" /> </div>
                 <h1 i18n i18n-html="以太智能合约">以太智能合约</h1>
                 <h2> </h2>
-                <p i18n i18n-html="全球唯一（USDT）以太智能合约，进场排队，出场秒到，结合了最尖端的，人工智能技术，大数据，云计算，完全，链上统计，链上核算，链上分配，链上支付，（全智能合约）。">全球唯一（USDT）以太智能合约，进场排队，出场秒到，结合了最尖端的，人工智能技术，大数据，云计算，完全，链上统计，链上核算，链上分配，链上支付，（全智能合约）。</p>
+                <p i18n i18n-html="全球唯一（ERC20_USDT）以太智能合约；进场排队、提币秒到、结合最尖端的、区块链技术、大数据、云计算、完全链上统计、链上核算、链上分配、链上支付的智能合约。">全球唯一（ERC20_USDT）以太智能合约；进场排队、提币秒到、结合最尖端的、区块链技术、大数据、云计算、完全链上统计、链上核算、链上分配、链上支付的智能合约。</p>
 
             </div>
         </div>
@@ -105,7 +105,7 @@
                         <div class="tab-box" style="display: block;">
                             <div class="investment-box">
                                 <h4>
-                                    <i i18n i18n-html="当前门票的共振比率">当前门票的共振比率</i>
+                                    <i i18n i18n-html="当前门票的闪兑比率">当前门票的闪兑比率</i>
                                     <span><i>1</i>USDT~<i class="data-contractState4">--</i>ZNHY</span>
                                 </h4>
                                 <div class="input-group input-group-lg">
@@ -600,15 +600,46 @@
 
 
 <!-- Dapp JS -->
-<script src="./Plugin/Dapp/web3.min.js"></script>
+<!--<script src="./Plugin/Dapp/web3.min.js"></script>-->
 <script src="./Plugin/Dapp/MathRepairV4.js?v=1.0.1"></script>
-<script src="./Plugin/Dapp/DappBase.Plugin.js?v=1.1.7"></script>
-<script src="./Plugin/Dapp/DappContract.Plugin.js?v=1.1.7"></script>
+<script src="./Plugin/Dapp/DappBase.Plugin.js?v=1.1.8"></script>
+<script src="./Plugin/Dapp/DappContract.Plugin.js?v=1.1.8"></script>
 <script src="./Scripts/DateFormat.js"></script>
-<script src="./Plugin/Dapp/main.js?v=1.1.23"></script>
+<!--<script src="./Plugin/Dapp/main.js?v=1.1.24"></script>-->
+<script>
+    $.extend({
+        loadScript: function (url, cb, options) {
+            // allow user to set any option except for dataType, cache, and url
+            options = $.extend({}, {
+                dataType: "script",
+                cache: true,
+                url: url
+            }, options);
+
+            // Use $.ajax() since it is more flexible than $.getScript
+            // Return the jqXHR object so we can chain callbacks
+            return $.ajax(options).done(function (script, textStatus) {
+                typeof cb === "function" && cb(script, textStatus)
+            });
+        }
+    });
+
+    //处理火币加载注入web3问题
+    function loadScript(url, cb) {
+        $.loadScript(url, function () {
+            typeof cb === "function" && cb()
+        });
+    }
+    $(function () {
+        loadScript('./Plugin/Dapp/web3.min.js', function () {
+            loadScript('./Plugin/Dapp/main.js?v=1.1.24', function () {
+            })
+        })
+    })
+</script>
 <script>
     //显示信息处理
-     function HandleShowContractUserInfo_Text() {
+    function HandleShowContractUserInfo_Text() {
         //显示等级
         var level = $('.data-contractUserInfo2').data("value")
         var levelShow = "-"
@@ -801,7 +832,7 @@
             laytpl = layui.laytpl;
 
             $("[i18n]").i18n(function (strtemplet, i18nLang, formtCB, setCB) {
-                if (strtemplet.indexOf("{"+"{")==-1) {
+                if (strtemplet.indexOf("{" + "{") == -1) {
                     setCB(formtCB(strtemplet));
                 } else {
                     laytpl(strtemplet).render(i18nLang, function (html) {

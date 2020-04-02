@@ -66,7 +66,7 @@
                                 try {
                                     //监听账号变更事件
                                     //console.log("Contract: add accountsChanged Event")
-                                    window.ethereum && window.ethereum.on('accountsChanged', function (accounts) {
+                                    window.ethereum && window.ethereum.on && window.ethereum.on('accountsChanged', function (accounts) {
                                         //处理账号变更事件
                                         _this._accountsChangedEvent(accounts[0]);
                                     })
@@ -85,30 +85,12 @@
             //初始化 设置 合约对象
             var _this = this;
             try {
-                // 定义合约abi
-                var contractAbi = contractABI || _this.options.contract.ContractABI
-
-                // 合约地址
-                var _contractAddress = contractAddress || _this.options.contract.ContractAddress;
-                if (!contractAbi) {
-                    console.log('contractAbi is empty, Web3ContractObj Initialization failed')
-                    return;
-                }
-                if (!_contractAddress) {
-                    console.log('contractAddress is empty, Web3ContractObj Initialization failed')
-                    return;
-                }
-
                 //来源地址
                 if (fromAddress) {
-                    _this.ContractObj = new web3.eth.Contract(contractAbi, _contractAddress, {
-                        from: fromAddress, // default from address 授权访问数据必须设置
-                    });
+                    _this.ContractObj = _this._getContractObj(contractAddress, contractABI, fromAddress);
                 } else {
                     _this.DappBaseObj.getCurrentAccount(function (_fromAddress) {
-                        _this.ContractObj = new web3.eth.Contract(contractAbi, _contractAddress, {
-                            from: _fromAddress, // default from address 授权访问数据必须设置
-                        });
+                        _this.ContractObj = _this._getContractObj(contractAddress, contractABI, _fromAddress);
                     })
                 }                
             } catch (e) {
@@ -213,9 +195,8 @@
                     console.log('contractAddress is empty, Web3ContractObj Initialization failed')
                     return;
                 }
-                return new web3.eth.Contract(contractAbi, _contractAddress, {
-                    from: fromAddress, // default from address 授权访问数据必须设置
-                });
+
+                return _this.DappBaseObj._getContractObj(_contractAddress, contractAbi, fromAddress);
             } catch (e) {
                 console.log(e)
             }

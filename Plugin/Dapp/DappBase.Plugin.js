@@ -60,69 +60,14 @@ function DappCreate(_options) {
             //初始化 基础web3接口方法
             var _this = this;
             try {
-                if (window.ethereum)
-                {
-                    //DAPP browsers环境
+                var web3Provider = window.ethereum || (window.web3 && window.web3.currentProvider) || Web3.givenProvider;
+                if (window.web3) {
+                    window._web3 = window.web3
+                }
+
+                if (web3Provider) {
                     //创建web3对象
-                    window.web3 = new Web3(ethereum);
-                    //授权初始化
-                    if (_this.options.isAuthorize) {
-                        //鉴权授权获取账户
-                        _this.getCurrentAccount(function (defaultAccount) {
-                            window.defaultAccount = defaultAccount;
-                            //初始化完成执行回调鉴权
-                            typeof _this.options.initCallBack === "function" && _this.options.initCallBack(_this, defaultAccount, true, isNotFirst)
-                            //初始化完成执行扩展回调
-                            typeof _this.options.extensionCallBack === "function" && _this.options.extensionCallBack(_this, defaultAccount, true, isNotFirst)
-                        })
-                    }
-
-                    //网络类型回调
-                    _this.getNetworkType(function (networkType) {
-                        //获取网络名称/区块浏览器
-                        var networkName = _this._getNetworkName(networkType);
-                        var networkScan = _this._getNetworkScan(networkType);
-                        //初始化完成执行回调处理网络类型
-                        typeof _this.options.initHandleNetworkType === "function" && _this.options.initHandleNetworkType(_this, networkType, networkName, networkScan);
-                        //非授权回调、、兼容重写调用
-                        if (!_this.options.isAuthorize) {
-                            //初始化完成执行回调鉴权
-                            typeof _this.options.initCallBack === "function" && _this.options.initCallBack(_this, null, true, isNotFirst)
-                            //初始化完成执行扩展回调
-                            typeof _this.options.extensionCallBack === "function" && _this.options.extensionCallBack(_this, null, true, isNotFirst)
-                        }
-                    })
-
-                    if (!isNotFirst) {
-                        try {
-                            //监听网络变更事件
-                            //console.log("base: add networkChanged Event")
-                            if (window.ethereum) {
-                                window.ethereum.autoRefreshOnNetworkChange = false;
-                            }
-                            window.ethereum && window.ethereum.on('networkChanged', function (networkType) {
-                                //处理网络变更事件
-                                _this._networkChangedEvent(networkType);
-                            })
-
-                            //监听账号变更事件
-                            //console.log("base: add accountsChanged Event")
-                            window.ethereum && window.ethereum.on('accountsChanged', function (accounts) {
-                                //处理账号变更事件
-                                _this._accountsChangedEvent(accounts[0]);
-                                window.defaultAccount = accounts[0];
-                            })
-                        } catch (e) {
-                            console.log(e)
-                        }
-                    }
-                }
-                else
-                if (window.web3)
-                {
-                    //web3环境
-                    window._web3 = web3;
-                    window.web3 = new Web3(web3.currentProvider);
+                    window.web3Obj = new Web3(web3Provider);
 
                     //授权初始化
                     if (_this.options.isAuthorize) {
@@ -151,13 +96,34 @@ function DappCreate(_options) {
                             typeof _this.options.extensionCallBack === "function" && _this.options.extensionCallBack(_this, null, true, isNotFirst)
                         }
                     })
-                }
-                else
-                {
+                } else {
                     //初始化完成执行回调
                     typeof _this.options.initCallBack === "function" && _this.options.initCallBack(_this, null, false, isNotFirst)
                     //初始化完成执行扩展回调
                     typeof _this.options.extensionCallBack === "function" && _this.options.extensionCallBack(_this, null, false, isNotFirst)
+                }
+                if (!isNotFirst) {
+                    try {
+                        //监听网络变更事件
+                        //console.log("base: add networkChanged Event")
+                        if (window.ethereum) {
+                            window.ethereum.autoRefreshOnNetworkChange = false;
+                        }
+                        window.ethereum && window.ethereum.on && window.ethereum.on('networkChanged', function (networkType) {
+                            //处理网络变更事件
+                            _this._networkChangedEvent(networkType);
+                        })
+
+                        //监听账号变更事件
+                        //console.log("base: add accountsChanged Event")
+                        window.ethereum && window.ethereum.on && window.ethereum.on('accountsChanged', function (accounts) {
+                            //处理账号变更事件
+                            _this._accountsChangedEvent(accounts[0]);
+                            window.defaultAccount = accounts[0];
+                        })
+                    } catch (e) {
+                        console.log(e)
+                    }
                 }
             } catch (e) {
                 console.log(e)
@@ -168,12 +134,18 @@ function DappCreate(_options) {
             var _this = this;
             try {
                 //定义回调函数
-                window.addEventListener('load', function () {
-                    _this._init()
-                });
+                //window.addEventListener('load', function () {
+                //    _this._init()
+                //});
+                $(function () {
+                    _this._init()           
+                })           
             } catch (e) {
                 console.log(e)
             }
+        },
+        getWeb3Obj: function () {
+            return window.web3Obj
         },
         _networkChangedEvent: function (networkType) {
             //监听网络变更事件
@@ -205,21 +177,24 @@ function DappCreate(_options) {
                 console.log(e)
             }
         },
-        _getNetworkType: function () {
-            //获取网络类型 非回调
-            var _this = this;
-            return window.ethereum.networkVersion || _this.options.defaultNetwork;
-        },
         getNetworkType: function (cb) {
             //获取网络类型
             var _this = this;
             try {
-                if (window.ethereum) {
-                    typeof cb === "function" && cb(_this._getNetworkType() || _this.options.defaultNetwork)
-                } else if (window._web3) {
+                if (_this.getWeb3Obj() && _this.getWeb3Obj().eth.net && _this.getWeb3Obj().eth.net.getId) {
+                    _this.getWeb3Obj().eth.net.getId(function (err, networkType) {
+                        typeof cb === "function" && cb(networkType.toString() || _this.options.defaultNetwork)
+                    })
+                } else if (_this.getWeb3Obj() && _this.getWeb3Obj().version && _this.getWeb3Obj().version.getNetwork) {
+                    _this.getWeb3Obj().version.getNetwork(function (err, networkType) {
+                        typeof cb === "function" && cb(networkType.toString() || _this.options.defaultNetwork)
+                    })
+                } else if (window._web3 && window._web3.version && window._web3.version.getNetwork) {
                     window._web3.version.getNetwork(function (err, networkType) {
                         typeof cb === "function" && cb(networkType.toString() || _this.options.defaultNetwork)
                     })
+                } else if (window.ethereum && window.ethereum.networkVersion) {
+                    typeof cb === "function" && cb(window.ethereum.networkVersion || _this.options.defaultNetwork)
                 } else {
                     typeof cb === "function" && cb(_this.options.defaultNetwork)
                 }
@@ -324,7 +299,7 @@ function DappCreate(_options) {
             //获取当前gas价格
             var _this = this;
             try {
-                web3.eth.getGasPrice().then(function (gasPrice) {
+                _this.getWeb3Obj().eth.getGasPrice().then(function (gasPrice) {
                     typeof cb === "function" && cb(gasPrice)
                 });
             } catch (e) {
@@ -332,8 +307,9 @@ function DappCreate(_options) {
             }
         },
         _getCurrentAccount: function (cb) {
+            var _this = this;
             //获取当前地址  非授权
-            web3.eth.getAccounts(function (err, accounts) {
+            _this.getWeb3Obj().eth.getAccounts(function (err, accounts) {
                 typeof cb === "function" && cb(accounts[0])
             })
         },
@@ -347,17 +323,37 @@ function DappCreate(_options) {
                         typeof cb === "function" && cb(accounts[0])
                     }).catch(function (reason) {
                         console.log(reason)
-                        //处理错误。用户可能拒绝登录:
-                        if (reason.code == 4001) {
-                            typeof _this.options.msgTips === "function" && _this.options.msgTips("用户拒绝帐户授权")
+                        //处理废弃接口  EIP 1102
+                        if (reason.code == 4200) {
+                            window.ethereum.send('eth_requestAccounts').then(function (accounts) {
+                                //完成执行回调
+                                typeof cb === "function" && cb(accounts[0])
+                            }).catch(function (reason) {
+                                console.log(reason)
+                                //处理错误。用户可能拒绝登录:
+                                if (reason.code == 4001) {
+                                    typeof _this.options.msgTips === "function" && _this.options.msgTips("用户拒绝帐户授权")
+                                } else {
+                                    typeof _this.options.msgTips === "function" && _this.options.msgTips(reason.message)
+                                }
+                                //权限拒绝回调
+                                typeof cb === "function" && cb()
+                            })
                         } else {
-                            typeof _this.options.msgTips === "function" && _this.options.msgTips(reason.message)
+                            //处理错误。用户可能拒绝登录:
+                            if (reason.code == 4001) {
+                                typeof _this.options.msgTips === "function" && _this.options.msgTips("用户拒绝帐户授权")
+                            } else {
+                                typeof _this.options.msgTips === "function" && _this.options.msgTips(reason.message)
+                            }
+                            //权限拒绝回调
+                            typeof cb === "function" && cb()
                         }
-                        //权限拒绝回调
-                        typeof cb === "function" && cb()
                     })
-                } else if (window._web3) {
-                    _this._getCurrentAccount(cb)
+                } else if (_this.getWeb3Obj()) {
+                    _this.getWeb3Obj().eth.getAccounts().then(function (accounts) {
+                        typeof cb === "function" && cb(accounts[0])
+                    });
                 } else {
                     typeof cb === "function" && cb(null)
                 }
@@ -418,10 +414,10 @@ function DappCreate(_options) {
             //获取指定地址余额
             var _this = this;
             try {
-                web3.eth.getBalance(address).then(function (result) {
+                _this.getWeb3Obj().eth.getBalance(address).then(function (result) {
                     var balance = result;
-                    if (web3.fromWei) {
-                        balance = web3.fromWei(result, 18)
+                    if (_this.getWeb3Obj().fromWei) {
+                        balance = _this.getWeb3Obj().fromWei(result, 18)
                     } else {
                         balance = balance.div(_this._ethWei)
                     }
@@ -460,12 +456,12 @@ function DappCreate(_options) {
                 var _contractAddress = contractAddress || _this.options.transaction.ContractAddress;
 
                 // 定义合约
-                var myContract = new web3.eth.Contract(contractAbi, _contractAddress);
+                var myContract = _this._getContractObj(_contractAddress, contractAbi);
 
                 myContract.methods.balanceOf(address).call().then(function (result) {
                     var balance = result;
-                    if (web3.fromWei) {
-                        balance = web3.fromWei(result, decimals || _this.options.transaction.Decimals || defaults.transaction.Decimals)
+                    if (_this.getWeb3Obj().fromWei) {
+                        balance = _this.getWeb3Obj().fromWei(result, decimals || _this.options.transaction.Decimals || defaults.transaction.Decimals)
                     } else {
                         balance = balance.div(Math.pow(10, decimals || _this.options.transaction.Decimals || defaults.transaction.Decimals))
                     }
@@ -505,7 +501,7 @@ function DappCreate(_options) {
                     value: money
                 }
 
-                web3.eth.sendTransaction(params)
+                _this.getWeb3Obj().eth.sendTransaction(params)
                     .on('transactionHash', function (rdata) {
                         typeof cb === "function" && cb(rdata, _fromAddress)
                     })
@@ -549,9 +545,7 @@ function DappCreate(_options) {
                 var _contractAddress = contractAddress || _this.options.transaction.ContractAddress;
 
                 // 定义合约
-                var myContract = new web3.eth.Contract(contractAbi, _contractAddress, {
-                    from: _fromAddress, // default from address
-                });
+                var myContract = _this._getContractObj(_contractAddress, contractAbi, _fromAddress);
 
                 myContract.methods.transfer(_toAddress, money)
                     .send({ from: _fromAddress })
@@ -589,6 +583,43 @@ function DappCreate(_options) {
                 })
             } catch (e) {
                 typeof _this.options.msgTips === "function" && _this.options.msgTips(e.message || e)
+            }
+        },
+        _getContractObj: function (contractAddress, contractABI, fromAddress) {
+            //初始化 设置 合约对象
+            var _this = this;
+            try {
+                // 定义合约abi
+                var contractAbi = contractABI || _this.options.contract.ContractABI
+
+                // 合约地址
+                var _contractAddress = contractAddress || _this.options.contract.ContractAddress;
+                if (!contractAbi) {
+                    console.log('contractAbi is empty, Web3ContractObj Initialization failed')
+                    return;
+                }
+                if (!_contractAddress) {
+                    console.log('contractAddress is empty, Web3ContractObj Initialization failed')
+                    return;
+                }
+                if (_this.getWeb3Obj().eth.Contract) {
+                    //web3 version >=1.0
+                    var _web3Obj = _this.getWeb3Obj()
+                    return new _web3Obj.eth.Contract(contractAbi, _contractAddress, {
+                        from: fromAddress, // default from address 授权访问数据必须设置
+                    });
+                } else if (_this.getWeb3Obj().eth.contract) {
+                    //web3 version <1.0
+                    var _web3Obj = _this.getWeb3Obj()
+                    var newObj = _web3Obj.eth.contract(contractAbi).at(_contractAddress)
+                    _this.getWeb3Obj().eth.defaultAccount = fromAddress
+                    return newObj
+                } else {
+                    console.log('contract create Provider err, Web3ContractObj Initialization failed')
+                    return;
+                }
+            } catch (e) {
+                console.log(e)
             }
         },
     }

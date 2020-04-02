@@ -84,7 +84,7 @@ a{color: #02c4b3;}
 .banner-logo img{display: block;width: 100%;}
 .banner-text h1{font-size: 76px;color: #fff;text-shadow: 0.2rem 0rem 1rem #0288fe, -0.2rem 0rem 1rem #0288fe, 0rem 0.2rem 1rem #0288fe, 0rem -0.2rem 1rem #0267fe;}
 .banner-text h2{font-size: 24px;color: #fff;margin: 40px 0 10px 0;}
-.banner-text p{font-size: 18px;color: #fff;margin-top: 20px;}
+.banner-text p{font-size: 18px;color: #fff;margin-top: 20px; line-height: 1.8;text-align: left; text-align: justify;text-align-last: center;}
 .start-time{line-height: 1.3em; margin-bottom: 20px;font-family: Roboto;padding-left: 2px; padding-right: 2px;color: #fff;
     font-size: 30px;font-weight: lighter;display: inline-block;border-top: solid 2px rgba(255,255,255,0.7);border-bottom:solid 2px rgba(255,255,255,0.7);}
 
